@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalDep</title>
+    <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.2/dist/terminal.min.css" /> <!-- css framework -->
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./bootstrap-grid.min.css" />
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11.7.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/minizinc/dist/minizinc.js"></script> <!-- minizinc -->
+    <script src="./main.js"></script> <!-- must go after minizinc -->
+    <style>
+        :root {
+          --global-font-size: 15px;
+          --global-line-height: 1.4em;
+          --global-space: 10px;
+          --font-stack: Menlo, Monaco, Lucida Console, Liberation Mono,
+            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace,
+            serif;
+          --mono-font-stack: Menlo, Monaco, Lucida Console, Liberation Mono,
+            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace,
+            serif;
+          --background-color: #222225;
+          --page-width: 60em;
+          --font-color: #e8e9ed;
+          --invert-font-color: #222225;
+          --secondary-color: #a3abba;
+          --tertiary-color: #a3abba;
+          --primary-color: #62c4ff;
+          --error-color: #ff3c74;
+          --progress-bar-background: #3f3f44;
+          --progress-bar-fill: #62c4ff;
+          --code-bg-color: #3f3f44;
+          --input-style: solid;
+          --display-h1-decoration: none;
+        }
+    </style>
+</head>
+<body class="terminal">
+    <div class="container">
+        <div class="row my-3">
+            <div class="col">
+                <form action="#" data-bitwarden-watching="1" onsubmit="runModel(event)">
+                    <fieldset>
+                      <legend>Input</legend>
+                      <div class="form-group">
+                        <label for="email">Load input file:</label>
+                        <input id="modelFileInput" name="modelFileInput" type="file" required="" accept=".dzn">
+                      </div>
+                      <div class="form-group">
+                        <button class="btn btn-default" type="submit" role="button" name="submit" id="submit" >Run model</button>
+                      </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+
+        <div class="row my-3">
+            <div class="col">
+                <fieldset>
+                    <legend>Status</legend>
+                    <div id="status" class="terminal-alert">Ready!</div>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="row my-3">
+            <div class="col">
+                <fieldset>
+                    <legend>Output</legend>
+                    <pre>
+                        <code id="codeOutput" class="language-json hljs css"></code>
+                    </pre>
+                </fieldset>
+            </div>
+        </div>
+    </div> 
+</body>
+</html>

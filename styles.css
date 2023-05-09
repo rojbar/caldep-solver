@@ -1,0 +1,29 @@
+input[type=file] {
+    border: 1px var(--input-style) var(--font-color);
+    width: 100%;
+    padding: .7em .5em;
+    font-size: 1em;
+    font-family: var(--font-stack);
+    -webkit-appearance: none;
+    border-radius: 0
+}
+
+input[type=file]::file-selector-button {
+    margin-right: 20px;
+    background:  var(--font-color);
+    padding: .65em 2em;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--invert-font-color);
+    color: var(--invert-font-color);
+    cursor: pointer;
+    transition: background .2s ease-in-out;
+    font-family: inherit;
+    outline: 0;
+    font-size: 1em;
+  }
+  
+input[type=file]::file-selector-button:hover {
+    background-color: var(--secondary-color);
+    color: var(--invert-font-color)
+}
