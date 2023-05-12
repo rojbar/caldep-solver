@@ -98,6 +98,8 @@ const FAILURE_STATUS = "Something went wrong, try again ✗"
 const LOADING_STATUS = "Loading..⧗"
 const SUCCESS_STATUS = "Success ✓"
 
+const ERRINVALIDFILEFORMAT = "error invalid file format"
+
 let instancesRunning = 0
 
 async function runModel(event){
@@ -122,6 +124,9 @@ async function runModel(event){
         instancesRunning = 0
         showMessageForStatus("failure")
         console.error(e)
+        if ( e === ERRINVALIDFILEFORMAT){
+          window.alert(ERRINVALIDFILEFORMAT)
+        }
     } 
 }
 
@@ -129,9 +134,15 @@ async function getModelReady(){
     const fileInput = document.getElementById("modelFileInput")
     const modelData = await fileInput.files[0].text()
 
+
+    let res = translateInput(modelData)
+    if (res === ERRINVALIDFILEFORMAT){
+      throw ERRINVALIDFILEFORMAT
+    }
+    
     const model = new MiniZinc.Model();
 
-    model.addDznString(modelData);
+    model.addDznString(res);
     model.addFile('model.mzn', modelSpecification);
 
     return model
@@ -189,12 +200,12 @@ function showOutput(output){
     const codeOutput = document.getElementById("codeOutput")
 
     calendar = []
-    for(row in output.calendar_of_matches)  {
-        ca = JSON.stringify(output.calendar_of_matches[row])
+    for(row in output.result.calendar_of_matches)  {
+        ca = JSON.stringify(output.result.calendar_of_matches[row])
         calendar.push(ca)
     }
   
-    output.calendar_of_matches = calendar
+    output.result.calendar_of_matches = calendar
     const myHtml = hljs.highlight(JSON.stringify(output, null, 2), { language: 'json' }).value
     codeOutput.innerHTML = myHtml
 }
@@ -236,7 +247,127 @@ function handleSuccess(solve){
   solve.then(result => {
     instancesRunning = 0 //important so other models can be run, it must be present if an error ocurrs inside a promise
     
-    showOutput(result.solution.output.json)
     showMessageForStatus("success")
+ 
+    showOutput({
+      status: result.status,
+      result: result.solution?.output?.json
+    })
 });
+}
+
+function translateInput(input){
+  rows = getRowsReady(input)
+
+  if (rows.length <= 3){
+    return ERRINVALIDFILEFORMAT
+  }
+
+
+  let threeFirstValues = getThreeFirstValues(rows)
+  if (threeFirstValues === ERRINVALIDFILEFORMAT){
+    return ERRINVALIDFILEFORMAT
+  }
+
+  let numberOfTeams = getInteger(threeFirstValues[0])
+
+  if (rows.length < 3 + numberOfTeams ){
+    return ERRINVALIDFILEFORMAT
+  }
+
+  let teamsCosts = getTeamCosts(rows, numberOfTeams)
+  if (teamsCosts === ERRINVALIDFILEFORMAT){
+    return ERRINVALIDFILEFORMAT
+  }
+
+  return translateToMinizinc(threeFirstValues, teamsCosts)
+}
+
+
+function getRowsReady(input){
+  input = input.trim()
+  let rows = input.split(/\r\n|\n/)
+
+  for(let i =0; i < rows.length; i++){
+    rows[i] = rows[i].trim()
+  }
+
+  return rows
+}
+
+function getInteger(input){
+  let number = parseInt(input)
+
+  if ( isNaN(number) || number < 0 || !Number.isInteger(number) ) {
+    return ERRINVALIDFILEFORMAT
+  }
+
+  return number
+}
+
+function getThreeFirstValues(rows){
+  let vals = []
+
+  for (let i = 0; i < 3; i++){
+    let number = getInteger(rows[i])
+    if (number === ERRINVALIDFILEFORMAT){
+      return ERRINVALIDFILEFORMAT
+    }
+
+    vals.push(number)
+  }
+
+  return vals
+}
+
+function getTeamCosts(rows, numberOfTeams){
+  costs = []
+
+  for(let i = 3; i < rows.length; i++ ){
+    let row = rows[i]
+
+    let columns = row.split(" ")
+    if (columns.length < numberOfTeams){
+      return ERRINVALIDFILEFORMAT
+    }
+
+    let costsRow = []
+    for(let j = 0; j < columns.length; j++){
+      let number = getInteger(columns[j])
+      if (number === ERRINVALIDFILEFORMAT){
+        return ERRINVALIDFILEFORMAT
+      }
+  
+      costsRow.push(number)
+    }
+
+    costs.push(costsRow)
+  }
+
+  return costs
+}
+
+function translateToMinizinc(threeFirstRows, costs){
+  let distancePerTeam = `[`
+  
+  for (let i = 0; i < costs.length; i++) {
+    const row = costs[i];
+
+    let rowValue = `|`
+    for (let j = 0; j < row.length; j++) {
+      const col = row[j];
+      rowValue += ` ${col},`
+    }
+
+    rowValue += '\n'
+    distancePerTeam += rowValue
+  }
+
+  distancePerTeam += ' |]'
+
+  return   `number_of_teams = ${threeFirstRows[0]};
+  min_for_permanency_or_tour = ${threeFirstRows[1]};
+  max_for_permanency_or_tour = ${threeFirstRows[2]};
+  distance_per_team = ${distancePerTeam};
+  `
 }
