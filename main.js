@@ -139,7 +139,7 @@ async function getModelReady(){
     if (res === ERRINVALIDFILEFORMAT){
       throw ERRINVALIDFILEFORMAT
     }
-    
+
     const model = new MiniZinc.Model();
 
     model.addDznString(res);
@@ -200,12 +200,15 @@ function showOutput(output){
     const codeOutput = document.getElementById("codeOutput")
 
     calendar = []
-    for(row in output.result.calendar_of_matches)  {
+    for(row in output.result?.calendar_of_matches)  {
         ca = JSON.stringify(output.result.calendar_of_matches[row])
         calendar.push(ca)
     }
   
-    output.result.calendar_of_matches = calendar
+    if (output.result !== undefined){
+      output.result.calendar_of_matches = calendar
+    }
+   
     const myHtml = hljs.highlight(JSON.stringify(output, null, 2), { language: 'json' }).value
     codeOutput.innerHTML = myHtml
 }
