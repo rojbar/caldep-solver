@@ -98,25 +98,32 @@ const FAILURE_STATUS = "Something went wrong, try again ✗"
 const LOADING_STATUS = "Loading..⧗"
 const SUCCESS_STATUS = "Success ✓"
 
-
-let intervalID;
+let instancesRunning = 0
 
 async function runModel(event){
     event.preventDefault()
+
+    if (instancesRunning > 0)  {
+      window.alert("Only one model can be running at a time")
+
+      return 
+    }
+
+    instancesRunning += 1
+
     showMessageForStatus("")
     clearOutput()
+
     try {
         model = await getModelReady()
         solveModel(model)
-        
 
-    } catch (error) {
+    } catch (e) {
+        instancesRunning = 0
         showMessageForStatus("failure")
-        console.error(error)
-        clearInterval(intervalID)
-    }
+        console.error(e)
+    } 
 }
-
 
 async function getModelReady(){
     const fileInput = document.getElementById("modelFileInput")
@@ -130,7 +137,7 @@ async function getModelReady(){
     return model
 }
 
-async function solveModel(model){
+function solveModel(model){
     const solve = model.solve({
         options: {
           solver: 'gecode',
@@ -140,44 +147,18 @@ async function solveModel(model){
 
     showMessageForStatus("loading")
     
-    setTimeout(() => {
-        if (solve.isRunning()) {
-            try {
-                solve.cancel();
-            }catch(e){
-                console.error(e)
-            }
-            showMessageForStatus("failure")
-            window.alert("model stoped, took more than 1 minute")            
-        }
-      }, 60000); // stop the model after 1 minute
+    stopAfterTime(solve)
     
-    solve.on('error', e => {
-        showMessageForStatus("failure")
-        console.error(e)
-        try {
-            solve.cancel();
-        }catch(e){
-            console.error(e)
-        }
-    });
+    handleError(solve)
 
-    solve.then(result => {
-        showOutput(result.solution.output.json)
-        showMessageForStatus("success")
-        clearInterval(intervalID)
-    });
+    handleSuccess(solve)
 }
 
 
 function showMessageForStatus(status){
     const statusElement = document.getElementById("status")
 
-    const clearStatusStyle = function () {
-        statusElement.classList.remove("terminal-alert-primary", "terminal-alert-error")
-    }
-
-    clearStatusStyle()
+    statusElement.classList.remove("terminal-alert-primary", "terminal-alert-error")
 
     switch (status) {
         case "success":
@@ -221,4 +202,41 @@ function showOutput(output){
 function clearOutput(){
     const codeOutput = document.getElementById("codeOutput")
     codeOutput.innerHTML = ""
+}
+
+function stopAfterTime(solve) { // stop the model after 1 minute
+  setTimeout(() => {
+    if (solve.isRunning()) {
+        try {
+            solve.cancel();
+        }catch(e){
+            instancesRunning = 0
+            console.error(e)
+        }
+        showMessageForStatus("failure")
+        window.alert("Model stoped, took more than 1 minute")            
+    }
+  }, 60000); 
+}
+
+function handleError(solve){
+  solve.on('error', e => {
+    showMessageForStatus("failure")
+    console.error(e)
+    try {
+        solve.cancel();
+    }catch(e){
+        instancesRunning = 0
+        console.error(e)
+    }
+});
+}
+
+function handleSuccess(solve){
+  solve.then(result => {
+    instancesRunning = 0 //important so other models can be run, it must be present if an error ocurrs inside a promise
+    
+    showOutput(result.solution.output.json)
+    showMessageForStatus("success")
+});
 }
