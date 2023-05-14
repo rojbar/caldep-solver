@@ -1,0 +1,6 @@
+output ["\"output\": {","\"default\": ",showJSON(concat([(show(calendar_of_matches[i,j])++"\t")++if j==number_of_teams then "\n" else " " endif | i in dates, j in teams]++[show(expenses)])),", \"raw\": ",showJSON(concat([(show(calendar_of_matches[i,j])++"\t")++if j==number_of_teams then "\n" else " " endif | i in dates, j in teams]++[show(expenses)])),"}, \"sections\": [\"default\", \"raw\"]"];
+set of int: teams = 1..4;
+set of int: dates = 1..6;
+array [dates,teams] of int: calendar_of_matches;
+int: number_of_teams = 4;
+int: expenses;

@@ -9,7 +9,7 @@ set of int: teams = 1..number_of_teams;
 set of int: dates = 1..number_of_dates;
 set of int: calendar_values = teams_in_negative union teams;
 
-array[teams,teams] of int: distance_per_team;
+array[teams,teams] of int: distance_per_team ;
 
 
 % Decision variables
@@ -45,15 +45,45 @@ constraint forall(team in teams)(
       )
 );
 
-% a tour is in the correct range
-constraint forall(team in teams)(
-    exists(first_date in dates,add in 0..number_of_dates-1 where first_date+add in dates)(
-      forall(date in first_date..first_date+add)(
-        calendar_of_matches[date,team] < 0 
-      ) /\
-      add+1 >= min_for_permanency_or_tour /\
-      add+1 <= max_for_permanency_or_tour
-    ) 
+% a tour or permanency is in the correct range ok?
+constraint forall(team in teams, date in dates)(
+    exists(leftLimit in dates, rightLimit in dates where leftLimit <= date /\ rightLimit >= date)(
+    rightLimit - leftLimit + 1 >= min_for_permanency_or_tour
+    /\
+    rightLimit - leftLimit + 1 <= max_for_permanency_or_tour
+    /\
+    forall(value in leftLimit..rightLimit)(
+      calendar_of_matches[value, team] > 0
+    )
+   \/
+    forall(value in leftLimit..rightLimit)(
+      calendar_of_matches[value, team] < 0
+    )
+  )
+);
+
+% a tour or permanency is in the correct range ok?
+constraint forall(team in teams, date in dates)(
+    not exists(
+    leftLimit in dates, 
+    rightLimit in dates where 
+    leftLimit <= date /\ 
+    rightLimit >= date /\
+    (
+    
+        forall(value in leftLimit..rightLimit)(
+      calendar_of_matches[value, team] > 0
+    )
+   \/
+    forall(value in leftLimit..rightLimit)(
+      calendar_of_matches[value, team] < 0
+    )
+    )
+    
+    )(
+    rightLimit - leftLimit + 1 > max_for_permanency_or_tour
+
+  )
 );
 
 % in two consecutives dates there cannot be the same match seems ok
