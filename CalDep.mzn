@@ -90,26 +90,30 @@ constraint forall(date in 1..number_of_dates-1, team in teams)(
 % Objective
 var int: expenses; 
 
-constraint expenses = sum(date in dates, team in teams)(
-  if not (date+1 in dates) \/  date == 1 then
-    if calendar_of_matches[date,team] < 0 then
-      distance_per_team[abs(calendar_of_matches[date,team]),team]
-      
-    else
-      distance_per_team[team,team] 
-      
-    endif
-    
-  elseif calendar_of_matches[date,team] > 0 /\ calendar_of_matches[date+1,team] < 0 then
+constraint expenses = sum(date in 0..number_of_dates, team in teams)(
+  if date == 0 then % before first row
+       if calendar_of_matches[date+1,team] < 0 then % from local to visitor
+        distance_per_team[abs(calendar_of_matches[date+1,team]),team] 
+       else
+          distance_per_team[team,team] 
+       endif
+  elseif date == number_of_dates then %last row
+       if calendar_of_matches[date,team] < 0 then   % from visitor to local
+          distance_per_team[team,abs(calendar_of_matches[date,team])] 
+       else
+          distance_per_team[team,team] 
+       endif
+  elseif calendar_of_matches[date,team] > 0 /\ calendar_of_matches[date+1,team] < 0 then % from local to visitor
     distance_per_team[abs(calendar_of_matches[date+1,team]),team]
+   
+  elseif calendar_of_matches[date,team] < 0 /\ calendar_of_matches[date+1,team] < 0 then % from visitor to visitor
+    distance_per_team[abs(calendar_of_matches[date+1,team]),abs(calendar_of_matches[date,team])]
     
-  elseif calendar_of_matches[date,team] < 0 /\ calendar_of_matches[date,team] != calendar_of_matches[date+1,team] then
-    distance_per_team[abs(calendar_of_matches[date+1,team]) ,abs(calendar_of_matches[date,team])] 
-  
+  elseif calendar_of_matches[date,team] < 0 /\ calendar_of_matches[date+1,team] > 0 then % from visitor to local
+    distance_per_team[team,abs(calendar_of_matches[date,team])] 
   else
     distance_per_team[team,team] 
-  
-  endif
+  endif 
 );
 
 solve minimize expenses;
