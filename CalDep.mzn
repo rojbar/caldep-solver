@@ -17,7 +17,7 @@ array [dates, teams] of var calendar_values: calendar_of_matches;
 
 % Constraints
 
-% all local matches are match with a visitor match seems OK
+% a team plays against other team in a date as local only and only if the other team plays as visitor
 constraint forall(date in dates, team in teams)( 
       if calendar_of_matches[date,team] > 0 then 
         calendar_of_matches[date,abs(calendar_of_matches[date,team])] == team*-1 
@@ -29,14 +29,14 @@ constraint forall(date in dates, team in teams)(
 );
 
 
-% for all dates half the matches are local and half visitors seems OK 
+% for all dates half the matches are local and half visitors
 constraint forall(date in dates)(
       sum(team in teams)(bool2int(calendar_of_matches[date, team] in teams)) == 
       sum(team in teams)(bool2int(calendar_of_matches[date, team] in teams_in_negative)) /\
       sum(team in teams)(bool2int(calendar_of_matches[date, team] in teams)) == number_of_teams/2
 );
 
-% there has to be a match as local and as visitor seems OK 
+% for each team there has to be two dates, one in which a team plays as local and other where it plays as visitor for all other teams
 constraint forall(team in teams)(
       forall(k in teams where k != team)(
             exists(date_one in dates, date_two in dates)(
@@ -81,7 +81,7 @@ constraint forall(team in teams)(
     )    
 );
 
-% in two consecutives dates there cannot be the same match seems ok
+% in two consecutives dates there cannot be the same match
 constraint forall(date in 1..number_of_dates-1, team in teams)( 
      abs(calendar_of_matches[date,team]) != abs(calendar_of_matches[date+1,team])
 );
@@ -118,10 +118,3 @@ constraint expenses = sum(date in 0..number_of_dates, team in teams)(
 
 solve minimize expenses;
          
-output [ show(calendar_of_matches[i,j])++ "\t"++
-         if j == number_of_teams then "\n" else " " endif |
-         i in dates, j in teams
-       ]++
-       [
-       show(expenses)
-       ];
