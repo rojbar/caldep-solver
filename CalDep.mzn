@@ -45,45 +45,40 @@ constraint forall(team in teams)(
       )
 );
 
-% a tour or permanency is in the correct range ok?
+% each team is in a permanency or team wich is greater or equal to the min_for_permanency_or_tour
 constraint forall(team in teams, date in dates)(
     exists(leftLimit in dates, rightLimit in dates where leftLimit <= date /\ rightLimit >= date)(
-    rightLimit - leftLimit + 1 >= min_for_permanency_or_tour
-    /\
-    rightLimit - leftLimit + 1 <= max_for_permanency_or_tour
-    /\
-    forall(value in leftLimit..rightLimit)(
-      calendar_of_matches[value, team] > 0
+        rightLimit - leftLimit + 1 >= min_for_permanency_or_tour
+        /\
+        forall(value in leftLimit..rightLimit)(
+          calendar_of_matches[value, team] > 0
+        )  
+        \/
+        forall(value in leftLimit..rightLimit)(
+          calendar_of_matches[value, team] < 0
+        )
     )
-   \/
-    forall(value in leftLimit..rightLimit)(
-      calendar_of_matches[value, team] < 0
-    )
-  )
 );
 
-% a tour or permanency is in the correct range ok?
-constraint forall(team in teams, date in dates)(
+% for a team there is no permanency or tour that are greater than the max 
+constraint forall(team in teams)(
     not exists(
-    leftLimit in dates, 
-    rightLimit in dates where 
-    leftLimit <= date /\ 
-    rightLimit >= date /\
-    (
-    
+      leftLimit in dates, 
+      rightLimit in dates where 
+      leftLimit <= rightLimit /\
+      (
         forall(value in leftLimit..rightLimit)(
-      calendar_of_matches[value, team] > 0
+            calendar_of_matches[value, team] > 0
+        )
+        \/
+        forall(value in leftLimit..rightLimit)(
+            calendar_of_matches[value, team] < 0
+        )
+      )
     )
-   \/
-    forall(value in leftLimit..rightLimit)(
-      calendar_of_matches[value, team] < 0
-    )
-    )
-    
-    )(
-    rightLimit - leftLimit + 1 > max_for_permanency_or_tour
-
-  )
+    (
+        rightLimit - leftLimit + 1 > max_for_permanency_or_tour
+    )    
 );
 
 % in two consecutives dates there cannot be the same match seems ok

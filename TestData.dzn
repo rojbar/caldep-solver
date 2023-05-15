@@ -1,6 +1,6 @@
 number_of_teams = 4;
 min_for_permanency_or_tour = 1;
-max_for_permanency_or_tour = 3;
+max_for_permanency_or_tour = 2;
 distance_per_team = [| 0, 745, 665, 929,
                      | 745, 0, 80, 337,
                      | 665, 80, 0, 380, 
