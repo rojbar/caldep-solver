@@ -11,7 +11,10 @@ set of int: calendar_values = teams_in_negative union teams;
 
 array[teams,teams] of int: distance_per_team ;
 
-
+% assert input is correct
+constraint assert( min_for_permanency_or_tour > 0, "Error: min for permanency or tour must be greather than 0");
+constraint assert( max_for_permanency_or_tour > 0, "Error: max for permanency or tour must be greather than 0");
+constraint assert( min_for_permanency_or_tour < max_for_permanency_or_tour, "Error: max for permanency or tour must be greather than min for permanency or tour");
 % Decision variables
 array [dates, teams] of var calendar_values: calendar_of_matches;
 
