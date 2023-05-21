@@ -1,7 +1,15 @@
 % Constants
 int: number_of_teams;
+constraint assert( number_of_teams > 0, "Error: number of teams must be greather than 0");
+constraint assert( number_of_teams mod 2 == 0, "Error: number of teams must be even");
+
 int: min_for_permanency_or_tour;
 int: max_for_permanency_or_tour;
+constraint assert( min_for_permanency_or_tour > 0, "Error: min for permanency or tour must be greather than 0");
+constraint assert( max_for_permanency_or_tour > 0, "Error: max for permanency or tour must be greather than 0");
+constraint assert( min_for_permanency_or_tour < max_for_permanency_or_tour, "Error: max for permanency or tour must be greather or equal than min for permanency or tour");
+
+
 int: number_of_dates = (2*(number_of_teams-1));
 
 set of int: teams_in_negative = -1*number_of_teams..-1;
@@ -9,26 +17,17 @@ set of int: teams = 1..number_of_teams;
 set of int: dates = 1..number_of_dates;
 set of int: calendar_values = teams_in_negative union teams;
 
-array[teams,teams] of int: distance_per_team ;
+array[teams,teams] of int: distance_per_team;
+constraint assert( forall(i in teams, j in teams)(
+  distance_per_team[i,j] >= 0
+), "Error: distance must be greather or equal 0");
 
-% assert input is correct
-constraint assert( min_for_permanency_or_tour > 0, "Error: min for permanency or tour must be greather than 0");
-constraint assert( max_for_permanency_or_tour > 0, "Error: max for permanency or tour must be greather than 0");
-constraint assert( min_for_permanency_or_tour < max_for_permanency_or_tour, "Error: max for permanency or tour must be greather than min for permanency or tour");
 % Decision variables
 array [dates, teams] of var calendar_values: calendar_of_matches;
 
-% Constraints
-
 % a team plays against other team in a date as local only and only if the other team plays as visitor
-constraint forall(date in dates, team in teams)( 
-      if calendar_of_matches[date,team] > 0 then 
-        calendar_of_matches[date,abs(calendar_of_matches[date,team])] == team*-1 
-      
-      else
-        calendar_of_matches[date,abs(calendar_of_matches[date,team])] == team
-     
-      endif
+constraint forall(date in dates, team in teams, k in teams)(
+      calendar_of_matches[date,team] == k <->  calendar_of_matches[date,k] ==  team*-1 
 );
 
 
