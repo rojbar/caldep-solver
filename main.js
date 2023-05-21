@@ -130,6 +130,7 @@ const SUCCESS_STATUS = "Success ✓"
 const ERRINVALIDFILEFORMAT = "error invalid file format"
 
 let instancesRunning = 0
+let timeoutID 
 
 async function runModel(event){
     event.preventDefault()
@@ -144,6 +145,7 @@ async function runModel(event){
 
     showMessageForStatus("")
     clearOutput()
+    clearTimeout(timeoutID)
 
     try {
         model = await getModelReady()
@@ -248,7 +250,7 @@ function clearOutput(){
 }
 
 function stopAfterTime(solve) { // stop the model after 1 minute
-  setTimeout(() => {
+  timeoutID = setTimeout(() => {
     if (solve.isRunning()) {
         try {
             solve.cancel();
@@ -257,13 +259,14 @@ function stopAfterTime(solve) { // stop the model after 1 minute
             console.error(e)
         }
         showMessageForStatus("failure")
-        window.alert("Model stoped, took more than 1 minute")            
+        window.alert("Model stoped, took more than 10 minutes")            
     }
-  }, 60000); 
+  }, 600000); 
 }
 
 function handleError(solve){
   solve.on('error', e => {
+    clearTimeout(timeoutID)
     showMessageForStatus("failure")
     console.error(e)
     try {
@@ -278,7 +281,7 @@ function handleError(solve){
 function handleSuccess(solve){
   solve.then(result => {
     instancesRunning = 0 //important so other models can be run, it must be present if an error ocurrs inside a promise
-    
+    clearTimeout(timeoutID)
     showMessageForStatus("success")
  
     showOutput({
